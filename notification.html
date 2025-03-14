@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Project</title>
+</head>
+<style>
+    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            background-color: antiquewhite;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .notificationContainer {
+            background-color: #fff;
+            width: 700px;
+            margin: 2rem;
+            padding: 1rem 1rem;
+            border-radius: 1rem;
+            height: auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .notificationHeader {
+            display: flex;
+            align-items: center;
+        }
+
+        #num-of-notif {
+            background-color: blue;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        #mark-as-read {
+            color: gray;
+            cursor: pointer;
+            transition: 0.6s ease;
+        }
+
+        #mark-as-read:hover {
+            color: black;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .notificationCard {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+
+        .notificationCard img {
+            width: 50px;
+        }
+
+        .notificationCard .description {
+            margin-left: 10px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+
+        .unread {
+            background-color: rgb(251, 201, 210);
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #0077b6, #caf0f8);
+            color: white;
+            font-size: 20px;
+            position: relative;
+        }
+        .navbar img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        .navbar .left-section {
+            display: flex;
+            align-items: center;
+        }
+        .menu {
+            position: relative;
+            display: inline-block;
+        }
+        .menu-button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 150px;
+        }
+        .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            background: transparent;
+            color: #0077b6;
+            border: none;
+            cursor: pointer;
+        }
+        .dropdown button:hover {
+            background: rgba(202, 240, 248, 0.8);
+        }
+        .menu:hover .dropdown {
+            display: block;
+        }
+        .footer {
+            background: #0077b6;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            margin-top: auto;
+        }
+</style>
+<body>
+    <div class="navbar">
+        <div class="left-section">
+            <img src="pictures/switch.png" alt="Logo">
+            <span>Railway Inspection Dashboard</span>
+        </div>
+        <div class="menu">
+            <button class="menu-button">☰<span class="notification-badge" id="notif-badge">0</span></button>
+            <div class="dropdown">
+                <button onclick="notification()">Notifications</button>
+                <button onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="notificationContainer">
+            <header>
+                <div class="notificationHeader">
+                    <h1>Notification</h1>
+                    <span id="num-of-notif"></span>
+                </div>
+                <p id="mark-as-read">Mark as All Read</p>
+            </header>
+            <main>
+                <div class="notificationCard unread">
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 RailwayInspection. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+         function fetchNotifications() {
+            fetch("http://localhost:5000/notifications")
+                .then(response => response.json())
+                .then(data => {
+                    const notifBadge = document.getElementById("notif-badge");
+                    const notifContainer = document.querySelector("main");
+
+                    // Show badge only if there are faults
+                    if (data.count > 0) {
+                        notifBadge.textContent = data.count;
+                        document.getElementById("num-of-notif").innerText = data.count;
+                        notifBadge.style.display = "inline";
+                    } else {
+                        notifBadge.style.display = "none";
+                    }
+
+                    // Clear old notifications
+                    notifContainer.innerHTML = "";
+
+                    // Display new notifications
+                    data.faults.forEach(fault => {
+                        const notifCard = document.createElement("div");
+                        notifCard.classList.add("notificationCard", "unread");
+                        notifCard.innerHTML = `
+                            <p>Track ${fault.track}: ${fault.issue}</p>
+                        `;
+                        notifContainer.appendChild(notifCard);
+
+                        
+                    });
+                    // Update event listeners for new notifications
+                    addNotificationClickEvents();
+                })
+                .catch(error => console.error("Error fetching notifications:", error));
+        }
+
+        // Fetch notifications on page load
+        document.addEventListener("DOMContentLoaded", fetchNotifications);
+
+        document.getElementById('mark-as-read').addEventListener('click', () => {
+            const unReadMessages = document.querySelectorAll('.unread'); // Get latest unread messages
+            unReadMessages.forEach((message) => {
+                message.classList.remove('unread'); // Remove unread class
+            });
+
+            // Update unread count
+            document.getElementById('num-of-notif').innerText = "0";
+        });
+
+        // Ensure dynamically added notifications can be marked as read when clicked
+        function addNotificationClickEvents() {
+            document.querySelectorAll('.notificationCard').forEach((message) => {
+                message.addEventListener('click', () => {
+                    message.classList.remove('unread');
+                    const newUnreadMessages = document.querySelectorAll('.unread');
+                    document.getElementById('num-of-notif').innerText = newUnreadMessages.length;
+                });
+            });
+        }
+    </script>
+</body>
+</html>

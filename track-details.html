@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Details</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Wix+Madefor+Text&display=swap');
+        
+        body {
+            font-family: 'Wix Madefor Text', sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h2 {
+        font-family: 'Wix Madefor Text', sans-serif;
+        color: #0077b6;
+        margin-left: 20px;
+        text-align: center;
+        font-size: 40px;
+        font-weight: 700; /* Make the text bold */
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 119, 182, 0.4); /* Add shadow for depth */
+        letter-spacing: 2px; /* Add space between letters for a more elegant look */
+        text-transform: uppercase; /* Makes the text uppercase for added emphasis */
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #0077b6, #caf0f8);
+            color: white;
+            font-size: 20px;
+            position: relative;
+        }
+        .navbar img {
+            height: 40px;
+            margin-right: 15px;
+        }
+        .navbar .left-section {
+            display: flex;
+            align-items: center;
+        }
+        .menu {
+            position: relative;
+            display: inline-block;
+        }
+        .menu-button {
+            background: transparent;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 150px;
+        }
+        .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: left;
+            background: transparent;
+            color: #0077b6;
+            border: none;
+            cursor: pointer;
+        }
+        .dropdown button:hover {
+            background: rgba(202, 240, 248, 0.8);
+        }
+        .menu:hover .dropdown {
+            display: block;
+        }
+        .footer {
+            background: #0077b6;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            margin-top: auto;
+        }
+        table {
+            width: 90%; /* Make the table take 90% of the screen width */
+            margin: auto auto 40px auto; /* Centers the table and adds spacing at the bottom */
+            border-collapse: collapse; /* Ensures borders don’t double up */
+        }
+
+        th, td {
+            border: 2px solid black; /* Black outline */
+            padding: 10px; /* Adds spacing inside cells */
+            text-align: center; /* Centers the text */
+        }
+
+        th {
+            background-color: #0077b6; /* Blue header */
+            color: white;
+        }
+        .video-container {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height to vertically center */
+            width: 100%; /* Full width container */
+        }
+
+        video {
+            width: 75vw; /* 75% of the viewport width */
+            height: 75vh; /* 75% of the viewport height */
+            object-fit: cover; /* Ensures the video fills the space properly */
+            border-radius: 10px; /* Optional: Adds rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Optional: Adds shadow for better appearance */
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="left-section">
+            <img src="pictures/switch.png" alt="Logo">
+            <span>Railway Inspection Dashboard</span>
+        </div>
+        <div class="menu">
+            <button class="menu-button">☰</button>
+            <div class="dropdown">
+                <button>Notifications</button>
+                <button onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <h2>Track Details</h2>
+    
+    <!-- Video Player -->
+    <div class="video-container">
+        <video controls>
+            <source src="https://sdp.blob.core.windows.net/videos/dji_fly_20250305_10314 pm_0009_1741165546899_video_beautify.MP4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Track Details Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Track Location</th>
+                <th>Image</th>
+            </tr>
+        </thead>
+        <tbody id="track-details">
+            <!-- Track details will be inserted here -->
+        </tbody>
+    </table>
+    
+    <footer class="footer">
+        <p>&copy; 2025 RailwayInspection. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function logout() {
+            alert("Logging out...");
+            window.location.href = "index.html";
+        }
+
+        // Get track from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const track = urlParams.get("track");
+
+        // Fetch fault data for the selected track
+        function fetchTrackDetails() {
+            fetch("http://localhost:5000/faults") // Request fault data from backend
+                .then(response => response.json())
+                .then(data => {
+                    const trackData = data.filter(fault => fault.track === track);
+
+                    // Insert track details into the table
+                    const trackDetailsTable = document.getElementById("track-details");
+                    trackData.forEach(fault => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${fault.track}</td>
+                            <td><img src="${fault.image}" alt="${fault.issue}" width="500"></td>
+                        `;
+                        trackDetailsTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error("Error fetching track details:", error));
+        }
+
+        // Fetch track details when page loads
+        document.addEventListener("DOMContentLoaded", fetchTrackDetails);
+    </script>
+</body>
+</html>
